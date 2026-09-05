@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "number": {
+      "brightness": {
+        "default": "mdi:brightness-6"
+      }
+    },
+    "sensor": {
+      "page": {
+        "default": "mdi:view-grid-outline"
+      },
+      "status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "good": "mdi:lan-connect",
+          "warning": "mdi:lan-pending",
+          "error": "mdi:lan-disconnect",
+          "unknown": "mdi:help-network-outline"
+        }
+      },
+      "status_message": {
+        "default": "mdi:message-text-outline"
+      }
+    },
+    "switch": {
+      "enabled": {
+        "default": "mdi:power-plug",
+        "state": {
+          "off": "mdi:power-plug-off"
+        }
+      },
+      "screensaver": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      }
+    },
+    "select": {
+      "update_policy": {
+        "default": "mdi:package-up"
+      }
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit Bitfocus Companion verbinden",
+        "description": "Die REST-API von Companion ist experimentell. Starte Companion mit {flag}=1, sonst gibt es nichts, womit sich diese Integration verbinden kann. Der Token ist ein API-Token aus Companion.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "API-Token",
+          "ssl": "HTTPS verwenden",
+          "verify_ssl": "Zertifikat prüfen"
+        },
+        "data_description": {
+          "host": "Hostname oder IP-Adresse des Rechners, auf dem Companion läuft.",
+          "port": "Port der Companion-Weboberfläche. Standard ist 8000.",
+          "token": "Ein Token, den Companion im Authorization-Header akzeptiert.",
+          "ssl": "Nur einschalten, wenn Companion hinter einem TLS-Proxy läuft.",
+          "verify_ssl": "Für ein selbst signiertes Zertifikat ausschalten."
+        }
+      },
+      "discovery_confirm": {
+        "title": "{name} hinzufügen",
+        "description": "Home Assistant hat Companion {version} im Netzwerk gefunden. Prüfe den Port der Weboberfläche, normalerweise 8000, und trage einen API-Token ein. Die REST-API muss aktiv sein, dafür braucht es {flag}=1.",
+        "data": {
+          "port": "Port",
+          "token": "API-Token"
+        }
+      },
+      "confirm": {
+        "title": "{name} hinzufügen?",
+        "description": "Companion ist erreichbar, hat aber noch keine Surfaces oder Verbindungen. Sie tauchen hier auf, sobald du sie in Companion anlegst."
+      },
+      "devices": {
+        "title": "Auswählen, was hinzugefügt wird",
+        "description": "Companion hat {surface_count} Surface(s) und {connection_count} Verbindung(en). Verbindungen erscheinen nur, wenn der API-Token den Scope „connections“ hat. Alles, was du nicht anhakst, wird übersprungen. Surfaces und Verbindungen, die du später in Companion anlegst, erscheinen von allein.",
+        "data": {
+          "surfaces": "Surfaces",
+          "connections": "Verbindungen"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut bei Companion anmelden",
+        "description": "Der API-Token für {host} wurde abgelehnt. Trage einen Token ein, den Companion akzeptiert.",
+        "data": {
+          "token": "API-Token"
+        }
+      },
+      "reconfigure": {
+        "title": "Companion-Verbindung ändern",
+        "description": "Ändere die Adresse dieser Companion-Instanz oder tausche ihren API-Token aus. Die REST-API muss aktiv sein, dafür braucht es {flag}=1.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "API-Token",
+          "ssl": "HTTPS verwenden",
+          "verify_ssl": "Zertifikat prüfen"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unter dieser Adresse und diesem Port antwortet nichts. {error}",
+      "not_companion": "Da antwortet etwas, aber es ist nicht Companion. Prüfe Host und Port der Weboberfläche.",
+      "api_unavailable": "Companion läuft, aber seine REST-API ist aus. Starte Companion mit {flag}=1. Wenn das schon gesetzt ist, aktualisiere Companion. Die API gibt es ab Version 5.1. Anleitung für beides: {docs}",
+      "invalid_auth": "Companion hat diesen API-Token abgelehnt.",
+      "insufficient_scope": "Der Token funktioniert, aber er hat zu wenige Rechte. Er muss Surfaces und Verbindungen lesen dürfen und zum Ändern auch schreiben.",
+      "unknown": "Unerwarteter Fehler von Companion. {error}",
+      "unsupported_api": "Companion {version} hat eine REST-API, aber nicht {resource}. Genau die braucht diese Integration, sie ist also zu alt oder zu neu für diese Companion-Version. {docs}"
+    },
+    "abort": {
+      "already_configured": "Diese Companion-Instanz ist bereits eingerichtet.",
+      "reauth_successful": "Die erneute Anmeldung war erfolgreich.",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich.",
+      "already_in_progress": "Diese Companion-Instanz wird bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Companion-Optionen",
+        "menu_options": {
+          "devices": "Surfaces und Verbindungen auswählen",
+          "polling": "Abrufintervall ändern"
+        }
+      },
+      "devices": {
+        "title": "Auswählen, was hinzugefügt wird",
+        "description": "Companion hat {surface_count} Surface(s) und {connection_count} Verbindung(en). Verbindungen erscheinen nur, wenn der API-Token den Scope „connections“ hat. Wenn du etwas abhakst, verschwinden das zugehörige Gerät und seine Entitäten.",
+        "data": {
+          "surfaces": "Surfaces",
+          "connections": "Verbindungen"
+        }
+      },
+      "polling": {
+        "title": "Abrufintervall",
+        "description": "Companion kann keine Updates senden, deshalb fragt diese Integration danach. Ein kürzeres Intervall reagiert schneller und stellt mehr Anfragen.",
+        "data": {
+          "scan_interval": "Abrufintervall"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Home Assistant konnte Companion nicht erreichen und deshalb die Geräteliste nicht laden. {error}",
+      "not_companion": "Was unter dieser Adresse läuft, antwortet nicht mehr als Companion.",
+      "api_unavailable": "Companion läuft ohne seine REST-API. Starte es mit {flag}=1. {docs}",
+      "invalid_auth": "Companion hat den gespeicherten API-Token abgelehnt. Melde die Integration zuerst neu an.",
+      "insufficient_scope": "Der gespeicherte API-Token hat zu wenige Rechte.",
+      "unknown": "Unerwarteter Fehler von Companion. {error}",
+      "unsupported_api": "Companion {version} hat eine REST-API, aber nicht {resource}. Genau die braucht diese Integration, sie ist also zu alt oder zu neu für diese Companion-Version."
+    }
+  },
+  "entity": {
+    "number": {
+      "brightness": {
+        "name": "Helligkeit"
+      }
+    },
+    "select": {
+      "update_policy": {
+        "name": "Modul-Updates",
+        "state": {
+          "manual": "Manuell",
+          "stable": "Stabile Versionen",
+          "beta": "Beta-Versionen"
+        }
+      }
+    },
+    "sensor": {
+      "page": {
+        "name": "Seite"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "good": "Gut",
+          "warning": "Warnung",
+          "error": "Fehler",
+          "unknown": "Unbekannt"
+        }
+      },
+      "status_message": {
+        "name": "Statusmeldung"
+      }
+    },
+    "switch": {
+      "enabled": {
+        "name": "Aktiviert"
+      },
+      "screensaver": {
+        "name": "Bildschirmschoner"
+      }
+    }
+  },
+  "issues": {
+    "api_disabled": {
+      "title": "Die REST-API von Companion ist aus",
+      "description": "Companion unter {host} läuft, antwortet aber nicht mehr auf seiner REST-API. Starte Companion mit EXPERIMENTAL_ENABLE_REST_API=1. Bis dahin bleiben seine Surfaces und Verbindungen in Home Assistant nicht verfügbar."
+    },
+    "connections_scope_lost": {
+      "title": "Der API-Token darf keine Verbindungen mehr lesen",
+      "description": "Companion unter {host} liefert dieser Integration keine Verbindungen mehr. Meist fehlt dem API-Token der Scope „connections“. Nach einem Companion-Update kann es auch heißen, dass diese Version den Endpunkt nicht mehr anbietet, den die Integration nutzt. Die Verbindungsgeräte bleiben, ihre Entitäten sind nicht verfügbar."
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Companion hat den API-Token abgelehnt."
+    },
+    "api_unavailable": {
+      "message": "Companion läuft ohne seine REST-API. Dafür braucht es EXPERIMENTAL_ENABLE_REST_API=1."
+    },
+    "cannot_connect": {
+      "message": "Companion war nicht erreichbar. {error}"
+    },
+    "api_error": {
+      "message": "Companion hat die Anfrage abgelehnt. {error}"
+    },
+    "unsupported_api": {
+      "message": "Companion {version} hat {resource} nicht. Diese Integration braucht es aber."
+    },
+    "insufficient_scope": {
+      "message": "Der API-Token darf das nicht ändern. Ihm fehlt der Scope, den die Änderung braucht."
+    }
+  },
+  "system_health": {
+    "info": {
+      "instances": "Eingerichtete Instanzen",
+      "reachable": "Erreichbar",
+      "versions": "Companion-Version"
+    }
+  }
+}

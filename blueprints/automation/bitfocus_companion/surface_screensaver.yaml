@@ -1,0 +1,130 @@
+blueprint:
+  name: Sleep Companion surfaces when nobody is around
+  description: >-
+    Dims your Companion surfaces to 0% when nobody is around. Puts them back to the
+    brightness they had before when someone comes back.
+
+
+    You decide what "nobody is around" means. Add a person or a device tracker to
+    notice that you left the house. Add a motion or occupancy sensor to notice that
+    you left the room. You can add several. Then all of them must be clear before the
+    surfaces sleep, so they never go dark while something still says you are there.
+
+
+    A sensor that is unavailable also counts as "you are there", so an empty battery
+    cannot black out your studio. Someone in a named zone such as Work counts as away.
+
+
+    All surfaces sleep unless you pick some under "Which surfaces". Every surface
+    comes back to its own brightness, so decks that were dimmed differently stay
+    different.
+  domain: automation
+  homeassistant:
+    min_version: "2025.8.0"
+  input:
+    sleep_when:
+      name: Sleep when these are all clear
+      description: People, device trackers, occupancy or motion sensors.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: person
+            - domain: device_tracker
+            - domain: binary_sensor
+            - domain: input_boolean
+    sleep_delay:
+      name: Wait before sleeping
+      default:
+        minutes: 5
+      selector:
+        duration:
+    wake_when:
+      name: Wake on any of these
+      description: >-
+        Coming home, a door that opens, motion in the room. One of them is enough.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: person
+            - domain: device_tracker
+            - domain: binary_sensor
+            - domain: input_boolean
+    surface_selection:
+      name: Which surfaces
+      icon: mdi:monitor-multiple
+      collapsed: true
+      input:
+        screensaver_switches:
+          name: Only these surfaces
+          description: >-
+            Leave this empty and every surface sleeps, also the ones you add to
+            Companion later. Choose some here to use only those. Take the Screensaver
+            switches, not the brightness numbers.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: bitfocus_companion
+                  domain: switch
+
+mode: queued
+
+variables:
+  sleep_entities: !input sleep_when
+  chosen_switches: !input screensaver_switches
+  # "home" covers people and device trackers, "on" covers occupancy and motion.
+  # unavailable and unknown are in this list on purpose. A sensor with an empty
+  # battery must not black out a studio.
+  present_states:
+    - "on"
+    - home
+    - unavailable
+    - unknown
+  # An empty picker means every surface. Screensaver switches are the ones with no
+  # device class. The Enabled switches of connections have device_class: switch.
+  surfaces: >-
+    {{ chosen_switches if chosen_switches | count > 0
+       else integration_entities('bitfocus_companion') | select('match', 'switch\\.')
+            | reject('is_state_attr', 'device_class', 'switch') | list }}
+
+triggers:
+  - trigger: state
+    entity_id: !input sleep_when
+    not_to:
+      - "on"
+      - home
+      - unavailable
+      - unknown
+    for: !input sleep_delay
+    id: sleep
+  - trigger: state
+    entity_id: !input wake_when
+    to:
+      - "on"
+      - home
+    id: wake
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: sleep
+          # One sensor going quiet is not an empty room.
+          - condition: template
+            value_template: >-
+              {{ sleep_entities | map('states') | select('in', present_states)
+                 | list | count == 0 }}
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: "{{ surfaces }}"
+      - conditions:
+          - condition: trigger
+            id: wake
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: "{{ surfaces }}"

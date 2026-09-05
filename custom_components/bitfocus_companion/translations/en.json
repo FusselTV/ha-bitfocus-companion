@@ -1,0 +1,191 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Bitfocus Companion",
+        "description": "The Companion REST API is experimental. Start Companion with {flag}=1, or this integration has nothing to connect to. The token is an API token from Companion.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "API token",
+          "ssl": "Use HTTPS",
+          "verify_ssl": "Verify the certificate"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the machine running Companion.",
+          "port": "Port of the Companion web interface. The default is 8000.",
+          "token": "A token that Companion accepts in the Authorization header.",
+          "ssl": "Turn this on only if Companion runs behind a TLS proxy.",
+          "verify_ssl": "Turn this off for a self-signed certificate."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Add {name}",
+        "description": "Home Assistant found Companion {version} on your network. Check the port of its web interface, usually 8000, and enter an API token. The REST API must be on, which needs {flag}=1.",
+        "data": {
+          "port": "Port",
+          "token": "API token"
+        }
+      },
+      "confirm": {
+        "title": "Add {name}?",
+        "description": "Companion is reachable. It has no surfaces or connections yet - they show up here once you add them in Companion."
+      },
+      "devices": {
+        "title": "Choose what to add",
+        "description": "Companion has {surface_count} surface(s) and {connection_count} connection(s). Connections appear only if the API token has the connections scope. Anything you do not tick is skipped. Surfaces and connections that you add in Companion later appear on their own.",
+        "data": {
+          "surfaces": "Surfaces",
+          "connections": "Connections"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with Companion",
+        "description": "The API token for {host} was rejected. Enter a token that Companion accepts.",
+        "data": {
+          "token": "API token"
+        }
+      },
+      "reconfigure": {
+        "title": "Change Companion connection",
+        "description": "Change the address of this Companion, or replace its API token. The REST API must be on, which needs {flag}=1.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "API token",
+          "ssl": "Use HTTPS",
+          "verify_ssl": "Verify the certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nothing answered at this address and port. {error}",
+      "not_companion": "Something answered, but it is not Companion. Check the host and the port of the web interface.",
+      "api_unavailable": "Companion is running, but its REST API is off. Start Companion with {flag}=1. If it is already set, update Companion. The API needs version 5.1 or newer. How to do both: {docs}",
+      "invalid_auth": "Companion rejected this API token.",
+      "insufficient_scope": "This token works, but it may not do enough. It needs to read surfaces and connections, and to write in order to change them.",
+      "unknown": "Unexpected error from Companion. {error}",
+      "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion. {docs}"
+    },
+    "abort": {
+      "already_configured": "This Companion instance is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Re-configuration was successful.",
+      "already_in_progress": "This Companion instance is already being set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Companion options",
+        "menu_options": {
+          "devices": "Choose surfaces and connections",
+          "polling": "Change the polling interval"
+        }
+      },
+      "devices": {
+        "title": "Choose what to add",
+        "description": "Companion has {surface_count} surface(s) and {connection_count} connection(s). Connections appear only if the API token has the connections scope. If you untick one, its device and entities go away.",
+        "data": {
+          "surfaces": "Surfaces",
+          "connections": "Connections"
+        }
+      },
+      "polling": {
+        "title": "Polling interval",
+        "description": "Companion cannot push updates, so this integration asks it for them. A shorter interval reacts faster and makes more requests.",
+        "data": {
+          "scan_interval": "Polling interval"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Home Assistant could not reach Companion, so it cannot load the device list. {error}",
+      "not_companion": "Whatever is at that address no longer answers as Companion.",
+      "api_unavailable": "Companion is running without its REST API. Start it with {flag}=1. {docs}",
+      "invalid_auth": "Companion rejected the saved API token. Re-authenticate the integration first.",
+      "insufficient_scope": "The saved API token may not do enough.",
+      "unknown": "Unexpected error from Companion. {error}",
+      "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion."
+    }
+  },
+  "entity": {
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      }
+    },
+    "sensor": {
+      "page": {
+        "name": "Page"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "good": "Good",
+          "warning": "Warning",
+          "error": "Error",
+          "unknown": "Unknown"
+        }
+      },
+      "status_message": {
+        "name": "Status message"
+      }
+    },
+    "switch": {
+      "enabled": {
+        "name": "Enabled"
+      },
+      "screensaver": {
+        "name": "Screensaver"
+      }
+    },
+    "select": {
+      "update_policy": {
+        "name": "Module updates",
+        "state": {
+          "manual": "Manual",
+          "stable": "Stable releases",
+          "beta": "Beta releases"
+        }
+      }
+    }
+  },
+  "issues": {
+    "api_disabled": {
+      "title": "The Companion REST API is off",
+      "description": "Companion at {host} is running, but it no longer answers on its REST API. Start Companion with EXPERIMENTAL_ENABLE_REST_API=1. Until then its surfaces and connections stay unavailable in Home Assistant."
+    },
+    "connections_scope_lost": {
+      "title": "The API token can no longer read connections",
+      "description": "Companion at {host} no longer returns connections to this integration. Usually the API token is missing the connections scope. After a Companion update it can also mean that this version dropped the connections endpoint the integration uses. The connection devices stay, and their entities read as unavailable."
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Companion rejected the API token."
+    },
+    "api_unavailable": {
+      "message": "Companion is running without its REST API. It needs EXPERIMENTAL_ENABLE_REST_API=1."
+    },
+    "cannot_connect": {
+      "message": "Could not reach Companion. {error}"
+    },
+    "api_error": {
+      "message": "Companion refused the request. {error}"
+    },
+    "unsupported_api": {
+      "message": "Companion {version} does not have {resource}, which this integration needs."
+    },
+    "insufficient_scope": {
+      "message": "The API token is not allowed to change this. It is missing the scope the change needs."
+    }
+  },
+  "system_health": {
+    "info": {
+      "instances": "Configured instances",
+      "reachable": "Reachable",
+      "versions": "Companion version"
+    }
+  }
+}

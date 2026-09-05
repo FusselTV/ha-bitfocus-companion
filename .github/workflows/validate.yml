@@ -1,0 +1,77 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # HACS and hassfest both fail on things that change without this repo changing,
+    # so re-run weekly rather than finding out at release time.
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hassfest:
+    name: hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    # HACS reads hacs.json and the manifest from raw.githubusercontent.com without a
+    # token, which 404s on a private repository. Everything else it checks passes.
+    if: ${{ !github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: hacs/action@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          category: integration
+
+  lint:
+    name: Ruff and mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv venv --python 3.13
+      - run: uv pip install pytest-homeassistant-custom-component ruff mypy
+      - run: uv run ruff check custom_components tests
+      - run: uv run ruff format --check custom_components tests
+      - run: uv run mypy custom_components/bitfocus_companion
+
+  test:
+    name: Tests (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest Home Assistant hacs.json claims to support. Without this the
+          # claim rots silently. pycares is pinned because the old pin resolves to an
+          # aiodns/pycares pair that cannot import together.
+          - name: HA 2025.8
+            packages: 'pytest-homeassistant-custom-component==0.13.270 "pycares<5"'
+          - name: latest
+            packages: "pytest-homeassistant-custom-component"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv venv --python 3.13
+      - run: uv pip install ${{ matrix.packages }} pytest-cov
+      - run: >-
+          uv run pytest tests
+          --cov=custom_components.bitfocus_companion
+          --cov-report=term-missing
+          --cov-fail-under=95

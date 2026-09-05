@@ -1,0 +1,50 @@
+name: Release
+
+# Manual only. Publishing is a decision, not a side effect of merging.
+# The version lives in manifest.json and is bumped in a normal commit, so this
+# workflow never writes to the repository and every commit stays signed.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release. Must already be in manifest.json, e.g. 1.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check the version and the branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "Release from $DEFAULT_BRANCH, not $GITHUB_REF_NAME"
+            exit 1
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists"
+            exit 1
+          fi
+          manifest=$(python -c 'import json;print(json.load(open("custom_components/bitfocus_companion/manifest.json"))["version"])')
+          if [ "$manifest" != "$VERSION" ]; then
+            echo "manifest.json says $manifest, you asked for $VERSION"
+            exit 1
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "v$VERSION" --target "$GITHUB_SHA"
+          --title "v$VERSION" --generate-notes

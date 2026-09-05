@@ -1,0 +1,158 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration registers no custom actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      Companion has no push API for surfaces or connections, so a
+      DataUpdateCoordinator polls every 30 seconds by default, adjustable in the
+      options flow.
+  brands:
+    status: done
+    comment: >-
+      Companion's own application icon ships in brand/icon.png. Home Assistant
+      2026.3 and newer serve a custom integration's brand/ directory before
+      falling back to the brands CDN, so no brands PR is needed. A brands PR
+      under custom_integrations/ would cover older versions.
+  common-modules:
+    status: done
+    comment: Coordinator lives in coordinator.py, base entities in entity.py.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: No external dependency; the API client ships with the integration.
+  docs-actions:
+    status: exempt
+    comment: Integration registers no custom actions.
+  docs-conditions:
+    status: exempt
+    comment: Integration registers no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Integration registers no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Polling only; the integration subscribes to no events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: done
+    comment: >-
+      The config flow probes the OpenAPI document, then the surfaces and
+      connections endpoints, and reports each failure mode separately.
+  test-before-setup:
+    status: done
+    comment: >-
+      async_setup_entry checks reachability and version before the first refresh,
+      raising ConfigEntryNotReady, ConfigEntryError or ConfigEntryAuthFailed.
+  unique-config-entry:
+    status: done
+    comment: Host and port form the unique ID; matching entries are aborted.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: >-
+      No custom actions, but every entity write maps API failures onto
+      HomeAssistantError/ConfigEntryAuthFailed with translated messages.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters:
+    status: done
+    comment: >-
+      The setup dialog explains every field as you fill it in. The readme covers
+      only what the dialog cannot say, which is how Companion scopes its tokens.
+  entity-unavailable:
+    status: done
+    comment: >-
+      Entities go unavailable when the poll fails or when Companion stops
+      reporting that surface or connection.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by DataUpdateCoordinator, which logs once and again on recovery.
+  parallel-updates:
+    status: done
+    comment: >-
+      All platforms set PARALLEL_UPDATES = 0, so Home Assistant may dispatch a
+      service call to every entity at once. The API client caps it at 8 requests
+      in flight per Companion instance instead, which keeps a hundred-surface
+      brightness change off both Companion and Home Assistant's shared
+      per-host connection pool.
+  reauthentication-flow:
+    status: done
+    comment: A rejected or under-scoped token starts a reauth flow.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: done
+    comment: >-
+      One device for the Companion instance, one per surface and one per
+      connection, linked with via_device.
+  diagnostics: done
+  discovery:
+    status: done
+    comment: Companion advertises itself over mDNS; the flow only asks for port and token.
+  discovery-update-info:
+    status: done
+    comment: Rediscovery updates the stored host of an existing entry.
+  docs-data-update: done
+  docs-examples:
+    status: done
+    comment: >-
+      The shipped blueprint is the example, and it is a working automation rather
+      than a snippet to copy.
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: done
+    comment: >-
+      Every failure the integration can detect explains itself in the dialog or in
+      a repair notice. The readme lists the few facts those messages cannot carry.
+  docs-use-cases: done
+  dynamic-devices:
+    status: done
+    comment: Surfaces and connections added in Companion appear on the next poll.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      Every entity maps to a single cheap field of a poll that happens anyway;
+      none of them are noisy enough to warrant being disabled.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: done
+    comment: Host, port, TLS settings and token can all be changed after setup.
+  repair-issues:
+    status: done
+    comment: >-
+      Repair issues for a Companion that dropped its REST API, and for one that
+      is older than the version the API arrived in.
+  stale-devices:
+    status: done
+    comment: >-
+      Devices are dropped when Companion stops reporting them, and can be deleted
+      by hand via async_remove_config_entry_device.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: The bundled API client is aiohttp-based and fully async.
+  inject-websession:
+    status: done
+    comment: The client is handed Home Assistant's shared aiohttp session.
+  strict-typing:
+    status: done
+    comment: py.typed is shipped and mypy runs in strict mode over the integration.
