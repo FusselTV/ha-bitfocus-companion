@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -37,6 +38,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from yarl import URL
 
 from .api import (
     CompanionApiUnavailableError,
@@ -62,6 +64,8 @@ from .const import (
     MIN_SCAN_INTERVAL,
 )
 from .helpers import build_client
+
+_LOGGER = logging.getLogger(__name__)
 
 REST_API_FLAG = "EXPERIMENTAL_ENABLE_REST_API"
 
@@ -145,8 +149,28 @@ async def async_validate_input(
         return ValidationFailure({CONF_TOKEN: "insufficient_scope"}, {})
     except CompanionError as err:
         return ValidationFailure({"base": "unknown"}, {"error": str(err)})
+    except Exception as err:
+        _LOGGER.exception("Unexpected error while checking the Companion connection")
+        return ValidationFailure({"base": "unknown"}, {"error": str(err)})
 
     return ValidationResult(capabilities.version, surfaces, connections)
+
+
+@callback
+def _normalise_host(user_input: dict[str, Any]) -> None:
+    """Take what the browser address bar shows, not just a bare hostname.
+
+    A pasted "http://companion:8000/" would otherwise reach yarl as a host and raise,
+    which leaves the dialog with nothing to say.
+    """
+    raw = str(user_input[CONF_HOST]).strip()
+    parsed = URL(raw if "//" in raw else f"//{raw}")
+    if parsed.host:
+        user_input[CONF_HOST] = parsed.host
+    if parsed.explicit_port is not None:
+        user_input[CONF_PORT] = parsed.explicit_port
+    if parsed.scheme in ("http", "https"):
+        user_input[CONF_SSL] = parsed.scheme == "https"
 
 
 def _picker(options: list[SelectOptionDict]) -> SelectSelector:
@@ -259,6 +283,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
+            _normalise_host(user_input)
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
@@ -503,6 +528,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
+            _normalise_host(user_input)
             # Moving Companion to another address is a reconfigure, not a new entry.
             # The unique id moves with it, unless another entry is already there.
             unique_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}".lower()

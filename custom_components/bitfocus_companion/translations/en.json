@@ -64,7 +64,7 @@
       "api_unavailable": "Companion is running, but its REST API is off. Start Companion with {flag}=1. If it is already set, update Companion. The API needs version 5.1 or newer. How to do both: {docs}",
       "invalid_auth": "Companion rejected this API token.",
       "insufficient_scope": "This token works, but it may not do enough. It needs to read surfaces and connections, and to write in order to change them.",
-      "unknown": "Unexpected error from Companion. {error}",
+      "unknown": "Unexpected error from Companion. {error} The setup guide is at {docs}.",
       "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion. {docs}"
     },
     "abort": {
@@ -105,7 +105,7 @@
       "api_unavailable": "Companion is running without its REST API. Start it with {flag}=1. {docs}",
       "invalid_auth": "Companion rejected the saved API token. Re-authenticate the integration first.",
       "insufficient_scope": "The saved API token may not do enough.",
-      "unknown": "Unexpected error from Companion. {error}",
+      "unknown": "Unexpected error from Companion. {error} The setup guide is at {docs}.",
       "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion."
     }
   },

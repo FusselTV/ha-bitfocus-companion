@@ -9,17 +9,25 @@ from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
+from custom_components.bitfocus_companion.config_flow import _normalise_host
 from custom_components.bitfocus_companion.const import (
     CONF_EXCLUDED_CONNECTIONS,
     CONF_EXCLUDED_SURFACES,
     DEFAULT_TOKEN,
+    DOCS_URL,
     DOMAIN,
 )
 
@@ -633,3 +641,69 @@ async def test_a_moved_instance_never_takes_another_entry_unique_id(
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == HOST
     assert mock_config_entry.unique_id == f"{HOST}:{PORT}"
+
+
+@pytest.mark.parametrize(
+    ("pasted", "host", "port", "ssl"),
+    [
+        ("192.0.2.10", "192.0.2.10", 8000, False),
+        ("  192.0.2.10  ", "192.0.2.10", 8000, False),
+        ("192.0.2.10:8123", "192.0.2.10", 8123, False),
+        ("http://192.0.2.10", "192.0.2.10", 8000, False),
+        ("http://192.0.2.10:8123/", "192.0.2.10", 8123, False),
+        ("https://companion.example:8443/", "companion.example", 8443, True),
+    ],
+)
+def test_a_host_is_taken_from_what_the_address_bar_shows(
+    pasted: str, host: str, port: int, ssl: bool
+) -> None:
+    """Pasting a URL used to raise before anything could explain itself."""
+    user_input = {CONF_HOST: pasted, CONF_PORT: 8000, CONF_SSL: False}
+    _normalise_host(user_input)
+
+    assert user_input == {CONF_HOST: host, CONF_PORT: port, CONF_SSL: ssl}
+
+
+async def test_a_pasted_url_still_reaches_the_real_diagnosis(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A Companion without the REST API says so, and links the guide."""
+    _register_failure(aioclient_mock, "api_unavailable")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**ENTRY_DATA, CONF_HOST: f"http://{HOST}:{PORT}/"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "api_unavailable"}
+    assert result["description_placeholders"]["docs"] == DOCS_URL
+    assert result["description_placeholders"]["flag"] == "EXPERIMENTAL_ENABLE_REST_API"
+    assert _placeholders_cover(result)
+
+
+async def test_an_unexpected_failure_is_logged_and_explained(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Whatever goes wrong, the dialog says something and the log has the cause."""
+    aioclient_mock.get(OPENAPI_URL, exc=RuntimeError("something nobody predicted"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], dict(ENTRY_DATA)
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+    assert _placeholders_cover(result)
+    assert "Unexpected error while checking the Companion connection" in caplog.text
+    assert "something nobody predicted" in caplog.text

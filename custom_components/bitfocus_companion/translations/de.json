@@ -64,7 +64,7 @@
       "api_unavailable": "Companion läuft, aber seine REST-API ist aus. Starte Companion mit {flag}=1. Wenn das schon gesetzt ist, aktualisiere Companion. Die API gibt es ab Version 5.1. Anleitung für beides: {docs}",
       "invalid_auth": "Companion hat diesen API-Token abgelehnt.",
       "insufficient_scope": "Der Token funktioniert, aber er hat zu wenige Rechte. Er muss Surfaces und Verbindungen lesen dürfen und zum Ändern auch schreiben.",
-      "unknown": "Unerwarteter Fehler von Companion. {error}",
+      "unknown": "Unerwarteter Fehler von Companion. {error} Die Anleitung steht unter {docs}.",
       "unsupported_api": "Companion {version} hat eine REST-API, aber nicht {resource}. Genau die braucht diese Integration, sie ist also zu alt oder zu neu für diese Companion-Version. {docs}"
     },
     "abort": {
@@ -105,7 +105,7 @@
       "api_unavailable": "Companion läuft ohne seine REST-API. Starte es mit {flag}=1. {docs}",
       "invalid_auth": "Companion hat den gespeicherten API-Token abgelehnt. Melde die Integration zuerst neu an.",
       "insufficient_scope": "Der gespeicherte API-Token hat zu wenige Rechte.",
-      "unknown": "Unerwarteter Fehler von Companion. {error}",
+      "unknown": "Unerwarteter Fehler von Companion. {error} Die Anleitung steht unter {docs}.",
       "unsupported_api": "Companion {version} hat eine REST-API, aber nicht {resource}. Genau die braucht diese Integration, sie ist also zu alt oder zu neu für diese Companion-Version."
     }
   },
