@@ -67,8 +67,8 @@ rules:
   docs-installation-parameters:
     status: done
     comment: >-
-      The setup dialog explains every field as you fill it in. The readme covers
-      only what the dialog cannot say, which is how Companion scopes its tokens.
+      The setup dialog explains every field as you fill it in, including which
+      scopes the token needs. The readme covers only what the dialog cannot say.
   entity-unavailable:
     status: done
     comment: >-

@@ -288,11 +288,11 @@ async def test_reauth_flow(
     serve(aioclient_mock, [SURFACE], [CONNECTION])
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TOKEN: "cpn_admin"}
+        result["flow_id"], {CONF_TOKEN: "cpn_new"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_TOKEN] == "cpn_admin"
+    assert mock_config_entry.data[CONF_TOKEN] == "cpn_new"
 
 
 async def test_reconfigure_flow_moves_the_instance(

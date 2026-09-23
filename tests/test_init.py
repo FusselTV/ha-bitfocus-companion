@@ -77,13 +77,21 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"status": 403, "json": API_DISABLED}, id="switched off"),
+        pytest.param({"status": 404, "text": "Not found"}, id="build without the API"),
+    ],
+)
 async def test_setup_retries_when_api_is_off(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    response: dict[str, Any],
 ) -> None:
     """A Companion without the REST API is a retry, not a hard failure."""
-    aioclient_mock.get(OPENAPI_URL, status=404, text="Not found")
+    aioclient_mock.get(OPENAPI_URL, **response)
     aioclient_mock.get(f"{BASE}/", status=200, text=ADMIN_UI)
 
     await setup_entry(hass, mock_config_entry)
@@ -161,6 +169,31 @@ async def test_api_disabled_issue_appears_and_clears(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_api_switched_off_between_surfaces_and_connections(
+    hass: HomeAssistant,
+    mock_api: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Connections that vanish with the whole API are not a token problem."""
+    await setup_entry(hass, mock_config_entry)
+    serve(mock_api, [SURFACE, SURFACE_TWO], [CONNECTION])
+    mock_api.clear_requests()
+    mock_api.get(SURFACES_URL, json={"data": [SURFACE, SURFACE_TWO]})
+    mock_api.get(CONNECTIONS_URL, status=403, json=API_DISABLED)
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    registry = ir.async_get(hass)
+    entry_id = mock_config_entry.entry_id
+    assert registry.async_get_issue(DOMAIN, f"{ISSUE_API_DISABLED}_{entry_id}")
+    assert not registry.async_get_issue(
+        DOMAIN, f"{ISSUE_CONNECTIONS_SCOPE_LOST}_{entry_id}"
+    )
 
 
 async def test_stale_devices_are_dropped(

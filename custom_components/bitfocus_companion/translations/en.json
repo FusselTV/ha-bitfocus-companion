@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Bitfocus Companion",
-        "description": "Turn on the REST API in Companion under Settings → Protocols. Then use Add API key there, with the scopes read, write and connections.",
+        "description": "Turn on the REST API in Companion under Settings → Protocols. Then create a token with the + button below the switch, and give it the scopes read, write and connections.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -14,14 +14,14 @@
         "data_description": {
           "host": "Hostname or IP address of the machine running Companion.",
           "port": "Port of the Companion web interface. The default is 8000.",
-          "token": "Companion shows the key once, when you create it.",
+          "token": "Companion shows the token once, when you create it.",
           "ssl": "Turn this on only if Companion runs behind a TLS proxy.",
           "verify_ssl": "Turn this off for a self-signed certificate."
         }
       },
       "discovery_confirm": {
         "title": "Add {name}",
-        "description": "Home Assistant found Companion {version} on your network. Check the port of its web interface, usually 8000. Then enter an API key from Companion under Settings → Protocols, with the scopes read, write and connections.",
+        "description": "Home Assistant found Companion {version} on your network. Check the port of its web interface, usually 8000. Then enter an API token. Companion creates one under Settings → Protocols, with the + button below the REST API switch. Give it the scopes read, write and connections.",
         "data": {
           "port": "Port",
           "token": "API token"
@@ -41,7 +41,7 @@
       },
       "reauth_confirm": {
         "title": "Re-authenticate with Companion",
-        "description": "Companion rejected the API token for {host}. Create a new one in Companion under Settings → Protocols → Add API key, and enter it here.",
+        "description": "Companion rejected the API token for {host}. Create a new one in Companion under Settings → Protocols with the + button, and enter it here.",
         "data": {
           "token": "API token"
         }
@@ -63,7 +63,7 @@
       "not_companion": "Something answered, but it is not Companion. Check the host and the port of the web interface.",
       "api_unavailable": "Companion is running, but its REST API is off. Turn it on under Settings → Protocols. If that setting is not there, update Companion. The API needs version 5.1 or newer. How to do both: {docs}",
       "invalid_auth": "Companion rejected this API token.",
-      "insufficient_scope": "This token works, but it may not do enough. It needs the scopes read and write, and connections to see connections.",
+      "insufficient_scope": "This token works, but it may not do enough. It needs the scopes read and write. Add connections to see connections too.",
       "unknown": "Unexpected error from Companion. {error} The setup guide is at {docs}.",
       "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion. {docs}"
     },

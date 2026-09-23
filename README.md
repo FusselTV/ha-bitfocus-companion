@@ -57,8 +57,9 @@ leaving the house as well as leaving the room.
 
 ## Known limitations
 
-- It talks to Companion's REST API, which is only in beta builds so far and off by default. Setup
-  says so and links the [guide](https://github.com/FusselTV/ha-bitfocus-companion/wiki).
+- It talks to Companion's REST API, which is only in beta builds so far and off by default. When
+  setup finds it off, it says so and links the
+  [guide](https://github.com/FusselTV/ha-bitfocus-companion/wiki).
 - State is at most one polling interval old. The page sensor is good for dashboards and conditions,
   less good as an automation trigger. Shorten the interval if you need one.
 - Pressing buttons, switching pages and reading button state are not in the API.

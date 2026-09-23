@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
+from typing import Any
 
 import pytest
 from homeassistant.components.number import (
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
     AiohttpClientMocker,
@@ -30,11 +32,12 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import (
 
 from custom_components.bitfocus_companion import async_remove_config_entry_device
 from custom_components.bitfocus_companion.api import MAX_IN_FLIGHT
-from custom_components.bitfocus_companion.const import DOMAIN
+from custom_components.bitfocus_companion.const import DOMAIN, ISSUE_API_DISABLED
 from custom_components.bitfocus_companion.system_health import system_health_info
 
 from .conftest import (
     ADMIN_UI,
+    API_DISABLED,
     BASE,
     CONNECTION,
     CONNECTIONS_URL,
@@ -127,23 +130,35 @@ async def test_connection_status_without_a_category(
     assert _entity(hass, "binary_sensor", "binary_sensor.atem_problem").is_on is None
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"status": 403, "json": API_DISABLED}, id="switched off"),
+        pytest.param({"status": 404, "text": "Not found"}, id="build without the API"),
+    ],
+)
 async def test_write_that_hits_a_switched_off_api(
     hass: HomeAssistant,
     mock_api: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    response: dict[str, Any],
 ) -> None:
-    """A write after Companion lost its API is an error, not a silent no-op."""
+    """A write after Companion lost its API says so, not that the token is short."""
     await setup_entry(hass, mock_config_entry)
-    mock_api.patch(f"{SURFACES_URL}/{SURFACE['id']}", status=404, text="Not found")
+    mock_api.patch(f"{SURFACES_URL}/{SURFACE['id']}", **response)
     mock_api.get(f"{BASE}/", status=200, text=ADMIN_UI)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: "number.test_surface_brightness", ATTR_VALUE: 10},
             blocking=True,
         )
+    assert err.value.translation_key == "api_unavailable"
+    assert ir.async_get(hass).async_get_issue(
+        DOMAIN, f"{ISSUE_API_DISABLED}_{mock_config_entry.entry_id}"
+    )
 
 
 async def test_write_with_a_dead_token_starts_reauth(
