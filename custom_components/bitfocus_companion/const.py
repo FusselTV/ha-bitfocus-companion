@@ -21,10 +21,6 @@ CONF_EXCLUDED_CONNECTIONS: Final = "excluded_connections"
 
 DEFAULT_PORT: Final = 8000
 
-# Companion has no token management yet, only fixed strings compiled into the app.
-# cpn_admin is the one that reaches both surfaces and connections, so it is the
-# default until Companion ships tokens a user can create.
-DEFAULT_TOKEN: Final = "cpn_admin"  # noqa: S105 - a published placeholder, not a secret
 DEFAULT_SCAN_INTERVAL: Final = 30
 MIN_SCAN_INTERVAL: Final = 5
 MAX_SCAN_INTERVAL: Final = 3600

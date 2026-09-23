@@ -26,13 +26,13 @@ from custom_components.bitfocus_companion.config_flow import _normalise_host
 from custom_components.bitfocus_companion.const import (
     CONF_EXCLUDED_CONNECTIONS,
     CONF_EXCLUDED_SURFACES,
-    DEFAULT_TOKEN,
     DOCS_URL,
     DOMAIN,
 )
 
 from .conftest import (
     ADMIN_UI,
+    API_DISABLED,
     BASE,
     CONNECTION,
     CONNECTIONS_URL,
@@ -154,7 +154,7 @@ def _register_failure(mock: AiohttpClientMocker, mode: str) -> None:
         mock.get(OPENAPI_URL, status=404, text="nope")
         mock.get(f"{BASE}/", status=200, text="<html><title>nginx</title></html>")
     elif mode == "api_unavailable":
-        mock.get(OPENAPI_URL, status=404, text="Not found")
+        mock.get(OPENAPI_URL, status=403, json=API_DISABLED)
         mock.get(f"{BASE}/", status=200, text=ADMIN_UI)
     elif mode == "invalid_auth":
         mock.get(OPENAPI_URL, json=OPENAPI_DOC)
@@ -230,41 +230,17 @@ async def test_user_flow_already_configured(
 
 
 async def test_zeroconf_flow(
-    hass: HomeAssistant, mock_api: AiohttpClientMocker, mock_setup_entry: AsyncMock
-) -> None:
-    """A discovered instance that takes the default token asks nothing extra."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "devices"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"surfaces": [SURFACE["id"]], "connections": [CONNECTION["id"]]},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_TOKEN] == DEFAULT_TOKEN
-
-
-async def test_zeroconf_flow_asks_when_the_default_token_fails(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Only then does the port and token form appear."""
-    aioclient_mock.get(OPENAPI_URL, json=OPENAPI_DOC)
-    aioclient_mock.get(
-        SURFACES_URL, status=401, json={"error": {"code": "UNAUTHORIZED"}}
-    )
-
+    """A discovered instance asks for the port and a token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
     )
     assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"]["version"] == "5.1.0"
+    assert aioclient_mock.call_count == 0
 
     serve(aioclient_mock, [SURFACE], [CONNECTION])
     result = await hass.config_entries.flow.async_configure(
@@ -275,6 +251,7 @@ async def test_zeroconf_flow_asks_when_the_default_token_fails(
         result["flow_id"], {"surfaces": [SURFACE["id"]]}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_TOKEN] == "cpn_write"
 
 
@@ -311,11 +288,11 @@ async def test_reauth_flow(
     serve(aioclient_mock, [SURFACE], [CONNECTION])
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TOKEN: "cpn_admin"}
+        result["flow_id"], {CONF_TOKEN: "cpn_new"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_TOKEN] == "cpn_admin"
+    assert mock_config_entry.data[CONF_TOKEN] == "cpn_new"
 
 
 async def test_reconfigure_flow_moves_the_instance(
@@ -571,38 +548,15 @@ async def test_zeroconf_asks_before_adding_an_empty_companion(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: PORT, CONF_TOKEN: "cpn_write"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == HOST
-
-
-async def test_opening_the_discovery_card_does_not_probe_again(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Re-rendering the form must not send the request the first render sent."""
-    aioclient_mock.get(OPENAPI_URL, json=OPENAPI_DOC)
-    aioclient_mock.get(
-        SURFACES_URL, status=401, json={"error": {"code": "UNAUTHORIZED"}}
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
-    )
-    assert result["step_id"] == "discovery_confirm"
-    # The probe said why the default token failed, so the form does not ask blind.
-    assert result["errors"] == {CONF_TOKEN: "invalid_auth"}
-
-    before = len(aioclient_mock.mock_calls)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["step_id"] == "discovery_confirm"
-    assert result["errors"] == {CONF_TOKEN: "invalid_auth"}
-    assert len(aioclient_mock.mock_calls) == before
 
 
 async def test_a_moved_instance_never_takes_another_entry_unique_id(
@@ -682,7 +636,6 @@ async def test_a_pasted_url_still_reaches_the_real_diagnosis(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_unavailable"}
     assert result["description_placeholders"]["docs"] == DOCS_URL
-    assert result["description_placeholders"]["flag"] == "EXPERIMENTAL_ENABLE_REST_API"
     assert _placeholders_cover(result)
 
 

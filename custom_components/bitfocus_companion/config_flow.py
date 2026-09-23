@@ -57,7 +57,6 @@ from .const import (
     CONF_MACHINE_ID,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TOKEN,
     DOCS_URL,
     DOMAIN,
     MAX_SCAN_INTERVAL,
@@ -66,8 +65,6 @@ from .const import (
 from .helpers import build_client
 
 _LOGGER = logging.getLogger(__name__)
-
-REST_API_FLAG = "EXPERIMENTAL_ENABLE_REST_API"
 
 FIELD_SURFACES = "surfaces"
 FIELD_CONNECTIONS = "connections"
@@ -78,7 +75,7 @@ STEP_USER_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): NumberSelector(
             NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX, step=1)
         ),
-        vol.Required(CONF_TOKEN, default=DEFAULT_TOKEN): TextSelector(
+        vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_SSL, default=False): BooleanSelector(),
@@ -118,7 +115,7 @@ async def async_validate_input(
     """Check host, port and token, and fetch what is there to expose.
 
     Every failure mode gets its own message: an unreachable host, something that is
-    not Companion, a Companion without the experimental REST API, one that is too
+    not Companion, a Companion with its REST API switched off, one that is too
     old, a bad token, and a token whose scopes are too narrow all look identical from
     the outside otherwise.
     """
@@ -138,7 +135,7 @@ async def async_validate_input(
             {"version": err.version, "resource": err.missing},
         )
     except CompanionApiUnavailableError:
-        return ValidationFailure({"base": "api_unavailable"}, {"flag": REST_API_FLAG})
+        return ValidationFailure({"base": "api_unavailable"}, {})
     except CompanionNotFoundError:
         return ValidationFailure({CONF_HOST: "not_companion"}, {})
     except CompanionConnectionError as err:
@@ -263,8 +260,6 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialise the flow state."""
         self._data: dict[str, Any] = {}
         self._result: ValidationResult | None = None
-        self._probed = False
-        self._probe_failure: ValidationFailure | None = None
         self._discovered_name = ""
         self._discovered_version = ""
 
@@ -279,7 +274,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow started by the user."""
         errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {"flag": REST_API_FLAG, "docs": DOCS_URL}
+        placeholders: dict[str, str] = {"docs": DOCS_URL}
 
         if user_input is not None:
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
@@ -364,36 +359,13 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the port and token of a discovered instance.
-
-        Only asks when the defaults do not work. Companion's tokens are fixed strings
-        today, so trying the one that reaches everything costs one request and saves
-        the user from typing a magic word.
-        """
+        """Ask for the port and token of a discovered instance."""
         errors: dict[str, str] = {}
         placeholders = {
             "name": self._discovered_name,
             "version": self._discovered_version,
-            "flag": REST_API_FLAG,
             "docs": DOCS_URL,
         }
-
-        # Opening the discovery card re-runs this step, so probe only the first time.
-        if user_input is None and not self._probed:
-            self._probed = True
-            candidate = {**self._data, CONF_TOKEN: DEFAULT_TOKEN}
-            outcome = await async_validate_input(self.hass, candidate)
-            if isinstance(outcome, ValidationResult):
-                self._data = candidate
-                self._result = outcome
-                return await self.async_step_devices()
-            # Say why the default token did not work, instead of asking for a port
-            # and a token when the real problem is the flag or the version.
-            self._probe_failure = outcome
-
-        if user_input is None and self._probe_failure is not None:
-            errors = self._probe_failure.errors
-            placeholders |= self._probe_failure.placeholders
 
         if user_input is not None:
             candidate = {**self._data, **user_input}
@@ -421,7 +393,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
                                 min=1, max=65535, mode=NumberSelectorMode.BOX, step=1
                             )
                         ),
-                        vol.Required(CONF_TOKEN, default=DEFAULT_TOKEN): TextSelector(
+                        vol.Required(CONF_TOKEN): TextSelector(
                             TextSelectorConfig(type=TextSelectorType.PASSWORD)
                         ),
                     }
@@ -498,7 +470,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for a new token."""
         entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
-        placeholders = {"host": entry.title, "flag": REST_API_FLAG, "docs": DOCS_URL}
+        placeholders = {"host": entry.title, "docs": DOCS_URL}
 
         if user_input is not None:
             outcome = await async_validate_input(
@@ -524,7 +496,7 @@ class CompanionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Change host, port, TLS settings or token of an existing entry."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {"flag": REST_API_FLAG, "docs": DOCS_URL}
+        placeholders: dict[str, str] = {"docs": DOCS_URL}
 
         if user_input is not None:
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
@@ -577,7 +549,6 @@ class CompanionOptionsFlow(OptionsFlowWithReload):
             return self.async_abort(
                 reason=next(iter(outcome.errors.values())),
                 description_placeholders={
-                    "flag": REST_API_FLAG,
                     "docs": DOCS_URL,
                     **outcome.placeholders,
                 },

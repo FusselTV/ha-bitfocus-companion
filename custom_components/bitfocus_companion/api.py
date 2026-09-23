@@ -46,10 +46,11 @@ class CompanionNotFoundError(CompanionError):
 
 
 class CompanionApiUnavailableError(CompanionError):
-    """Companion is running, but its REST API is not mounted.
+    """Companion is running, but its REST API is off or missing."""
 
-    Either EXPERIMENTAL_ENABLE_REST_API is unset or the build predates the API.
-    """
+
+class CompanionApiDisabledError(CompanionApiUnavailableError):
+    """The REST API switch in Companion's settings is off."""
 
 
 class CompanionApiVersionError(CompanionError):
@@ -220,14 +221,14 @@ class CompanionClient:
                     ssl=self._ssl,
                 )
                 body = await response.text()
+            _raise_for_disabled_api(body)
             if response.status in (
                 HTTPStatus.NOT_FOUND,
                 HTTPStatus.UNAUTHORIZED,
                 HTTPStatus.FORBIDDEN,
             ):
-                # This path needs no token, so anything but a 200 here means the REST
-                # API is not the thing answering. Companion's legacy API replies 403
-                # when it is switched off, and 404 when it is on but has no such path.
+                # This path needs no token, so a 401 or 403 is not the REST API
+                # answering, and a 404 is a build without it.
                 await self._async_raise_for_missing_api()
             if response.status != HTTPStatus.OK:
                 raise CompanionResponseError(
@@ -377,13 +378,15 @@ class CompanionClient:
         except (TimeoutError, aiohttp.ClientError) as err:
             raise CompanionConnectionError(str(err)) from err
 
+        # A 403 like a narrow token's, so it must be caught before the scope check.
+        _raise_for_disabled_api(body)
         if response.status == HTTPStatus.UNAUTHORIZED:
             raise CompanionAuthError(_error_message(body) or "Token rejected")
         if response.status == HTTPStatus.FORBIDDEN:
             raise CompanionScopeError(_error_message(body) or "Token scope too narrow")
         if response.status == HTTPStatus.NOT_FOUND:
             # A 404 here has two meanings. Either the id is unknown, or the whole
-            # API is gone because Companion restarted without the flag.
+            # API is gone because Companion was replaced by a build without it.
             await self._async_raise_for_missing_api_or_id(body)
         if response.status >= HTTPStatus.BAD_REQUEST:
             raise CompanionResponseError(
@@ -420,6 +423,12 @@ def _error_payload(body: str) -> dict[str, Any]:
             payload: dict[str, Any] = error
             return payload
     return {}
+
+
+def _raise_for_disabled_api(body: str) -> None:
+    """Raise if Companion says its REST API switch is off."""
+    if _error_payload(body).get("code") == "API_DISABLED":
+        raise CompanionApiDisabledError(_error_message(body) or "API disabled")
 
 
 def _error_message(body: str) -> str | None:

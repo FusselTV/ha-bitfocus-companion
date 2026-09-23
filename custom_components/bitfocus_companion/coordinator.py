@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import (
     ApiCapabilities,
+    CompanionApiDisabledError,
     CompanionApiUnavailableError,
     CompanionAuthError,
     CompanionClient,
@@ -110,6 +111,9 @@ class CompanionCoordinator(DataUpdateCoordinator[CompanionData]):
             return [], True
         try:
             connections = await self.client.async_get_connections()
+        except CompanionApiDisabledError:
+            # Switched off between the two requests. That is the API, not the token.
+            raise
         except (CompanionScopeError, CompanionApiUnavailableError):
             # Either the token may not look, or this Companion dropped the version
             # of the resource this integration uses. Surfaces answered, so the API is
