@@ -21,6 +21,7 @@ from custom_components.bitfocus_companion.api import (
 
 from .conftest import (
     ADMIN_UI,
+    API_DISABLED,
     BASE,
     CONNECTION,
     CONNECTIONS_URL,
@@ -107,6 +108,15 @@ async def test_api_switched_off(
     aioclient_mock.get(f"{BASE}/", status=200, text=ADMIN_UI)
     with pytest.raises(CompanionApiUnavailableError):
         await client.async_get_capabilities()
+
+
+async def test_a_switched_off_api_is_not_a_scope_error(
+    client: CompanionClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Companion answers 403 for both, but only a narrow token needs a new token."""
+    aioclient_mock.get(SURFACES_URL, status=403, json=API_DISABLED)
+    with pytest.raises(CompanionApiUnavailableError):
+        await client.async_get_surfaces()
 
 
 async def test_some_other_server(

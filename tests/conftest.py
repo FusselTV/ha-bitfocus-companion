@@ -91,6 +91,7 @@ CONNECTION = {
 
 
 ADMIN_UI = "<!doctype html><html><head><title>Companion - Admin</title></head></html>"
+API_DISABLED = {"error": {"code": "API_DISABLED", "message": "REST API is disabled"}}
 
 
 def serve(

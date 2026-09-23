@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
@@ -30,6 +31,7 @@ from custom_components.bitfocus_companion.diagnostics import (
 
 from .conftest import (
     ADMIN_UI,
+    API_DISABLED,
     BASE,
     CONNECTION,
     CONNECTIONS_URL,
@@ -121,22 +123,29 @@ async def test_setup_starts_reauth_on_bad_token(
     )
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"status": 403, "json": API_DISABLED}, id="switched off"),
+        pytest.param({"status": 404, "text": "Not found"}, id="build without the API"),
+    ],
+)
 async def test_api_disabled_issue_appears_and_clears(
     hass: HomeAssistant,
     mock_api: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    response: dict[str, Any],
 ) -> None:
-    """Losing the REST API while running is reported as a repair issue."""
+    """Losing the REST API while running is a repair issue, not a reauth."""
     await setup_entry(hass, mock_config_entry)
     issue_id = f"{ISSUE_API_DISABLED}_{mock_config_entry.entry_id}"
     registry = ir.async_get(hass)
     assert registry.async_get_issue(DOMAIN, issue_id) is None
 
     mock_api.clear_requests()
-    mock_api.get(OPENAPI_URL, status=404, text="Not found")
-    mock_api.get(SURFACES_URL, status=404, text="Not found")
-    mock_api.get(CONNECTIONS_URL, status=404, text="Not found")
+    for url in (OPENAPI_URL, SURFACES_URL, CONNECTIONS_URL):
+        mock_api.get(url, **response)
     mock_api.get(f"{BASE}/", status=200, text=ADMIN_UI)
 
     freezer.tick(timedelta(seconds=31))
@@ -144,6 +153,7 @@ async def test_api_disabled_issue_appears_and_clears(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert registry.async_get_issue(DOMAIN, issue_id) is not None
     assert hass.states.get("number.test_surface_brightness").state == "unavailable"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
     serve(mock_api, [SURFACE, SURFACE_TWO], [CONNECTION])
 

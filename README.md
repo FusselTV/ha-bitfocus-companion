@@ -53,16 +53,12 @@ leaving the house as well as leaving the room.
 ## Good to know
 
 - Port 16622 is Companion's satellite port. The web interface, and this integration, want 8000.
-- To check a token: `curl -H 'Authorization: Bearer cpn_admin' http://HOST:8000/api/v2/surfaces/v1`
 - The logger is `custom_components.bitfocus_companion`.
 
 ## Known limitations
 
-- It talks to Companion's REST API, which is experimental, off by default, and only in beta builds
-  so far. Setup says so and links the
-  [guide](https://github.com/FusselTV/ha-bitfocus-companion/wiki).
-- Companion's tokens are fixed strings compiled into the app, not per-user secrets. Do not put an
-  instance on an untrusted network because of this integration.
+- It talks to Companion's REST API, which is only in beta builds so far and off by default. Setup
+  says so and links the [guide](https://github.com/FusselTV/ha-bitfocus-companion/wiki).
 - State is at most one polling interval old. The page sensor is good for dashboards and conditions,
   less good as an automation trigger. Shorten the interval if you need one.
 - Pressing buttons, switching pages and reading button state are not in the API.

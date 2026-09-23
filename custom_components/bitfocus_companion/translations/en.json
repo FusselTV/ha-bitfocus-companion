@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Bitfocus Companion",
-        "description": "The Companion REST API is experimental. Start Companion with {flag}=1, or this integration has nothing to connect to. The token is an API token from Companion.",
+        "description": "Turn on the REST API in Companion under Settings → Protocols. Then use Add API key there, with the scopes read, write and connections.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -14,14 +14,14 @@
         "data_description": {
           "host": "Hostname or IP address of the machine running Companion.",
           "port": "Port of the Companion web interface. The default is 8000.",
-          "token": "A token that Companion accepts in the Authorization header.",
+          "token": "Companion shows the key once, when you create it.",
           "ssl": "Turn this on only if Companion runs behind a TLS proxy.",
           "verify_ssl": "Turn this off for a self-signed certificate."
         }
       },
       "discovery_confirm": {
         "title": "Add {name}",
-        "description": "Home Assistant found Companion {version} on your network. Check the port of its web interface, usually 8000, and enter an API token. The REST API must be on, which needs {flag}=1.",
+        "description": "Home Assistant found Companion {version} on your network. Check the port of its web interface, usually 8000. Then enter an API key from Companion under Settings → Protocols, with the scopes read, write and connections.",
         "data": {
           "port": "Port",
           "token": "API token"
@@ -41,14 +41,14 @@
       },
       "reauth_confirm": {
         "title": "Re-authenticate with Companion",
-        "description": "The API token for {host} was rejected. Enter a token that Companion accepts.",
+        "description": "Companion rejected the API token for {host}. Create a new one in Companion under Settings → Protocols → Add API key, and enter it here.",
         "data": {
           "token": "API token"
         }
       },
       "reconfigure": {
         "title": "Change Companion connection",
-        "description": "Change the address of this Companion, or replace its API token. The REST API must be on, which needs {flag}=1.",
+        "description": "Change the address of this Companion, or replace its API token.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -61,9 +61,9 @@
     "error": {
       "cannot_connect": "Nothing answered at this address and port. {error}",
       "not_companion": "Something answered, but it is not Companion. Check the host and the port of the web interface.",
-      "api_unavailable": "Companion is running, but its REST API is off. Start Companion with {flag}=1. If it is already set, update Companion. The API needs version 5.1 or newer. How to do both: {docs}",
+      "api_unavailable": "Companion is running, but its REST API is off. Turn it on under Settings → Protocols. If that setting is not there, update Companion. The API needs version 5.1 or newer. How to do both: {docs}",
       "invalid_auth": "Companion rejected this API token.",
-      "insufficient_scope": "This token works, but it may not do enough. It needs to read surfaces and connections, and to write in order to change them.",
+      "insufficient_scope": "This token works, but it may not do enough. It needs the scopes read and write, and connections to see connections.",
       "unknown": "Unexpected error from Companion. {error} The setup guide is at {docs}.",
       "unsupported_api": "Companion {version} has a REST API, but it does not have {resource}. This integration needs that one, so the integration is either too old or too new for this Companion. {docs}"
     },
@@ -102,7 +102,7 @@
     "abort": {
       "cannot_connect": "Home Assistant could not reach Companion, so it cannot load the device list. {error}",
       "not_companion": "Whatever is at that address no longer answers as Companion.",
-      "api_unavailable": "Companion is running without its REST API. Start it with {flag}=1. {docs}",
+      "api_unavailable": "Companion is running, but its REST API is off. Turn it on under Settings → Protocols. {docs}",
       "invalid_auth": "Companion rejected the saved API token. Re-authenticate the integration first.",
       "insufficient_scope": "The saved API token may not do enough.",
       "unknown": "Unexpected error from Companion. {error} The setup guide is at {docs}.",
@@ -154,7 +154,7 @@
   "issues": {
     "api_disabled": {
       "title": "The Companion REST API is off",
-      "description": "Companion at {host} is running, but it no longer answers on its REST API. Start Companion with EXPERIMENTAL_ENABLE_REST_API=1. Until then its surfaces and connections stay unavailable in Home Assistant."
+      "description": "Companion at {host} is running, but its REST API is off. Turn it on in Companion under Settings → Protocols. Until then its surfaces and connections stay unavailable in Home Assistant."
     },
     "connections_scope_lost": {
       "title": "The API token can no longer read connections",
@@ -166,7 +166,7 @@
       "message": "Companion rejected the API token."
     },
     "api_unavailable": {
-      "message": "Companion is running without its REST API. It needs EXPERIMENTAL_ENABLE_REST_API=1."
+      "message": "Companion is running, but its REST API is off. Turn it on under Settings → Protocols."
     },
     "cannot_connect": {
       "message": "Could not reach Companion. {error}"

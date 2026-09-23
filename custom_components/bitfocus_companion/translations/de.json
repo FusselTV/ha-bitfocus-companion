@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Mit Bitfocus Companion verbinden",
-        "description": "Die REST-API von Companion ist experimentell. Starte Companion mit {flag}=1, sonst gibt es nichts, womit sich diese Integration verbinden kann. Der Token ist ein API-Token aus Companion.",
+        "description": "Schalte in Companion unter Settings → Protocols die REST-API ein. Lege dort mit „Add API key“ einen Schlüssel mit den Scopes read, write und connections an.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -14,14 +14,14 @@
         "data_description": {
           "host": "Hostname oder IP-Adresse des Rechners, auf dem Companion läuft.",
           "port": "Port der Companion-Weboberfläche. Standard ist 8000.",
-          "token": "Ein Token, den Companion im Authorization-Header akzeptiert.",
+          "token": "Companion zeigt den Schlüssel nur einmal, direkt nach dem Anlegen.",
           "ssl": "Nur einschalten, wenn Companion hinter einem TLS-Proxy läuft.",
           "verify_ssl": "Für ein selbst signiertes Zertifikat ausschalten."
         }
       },
       "discovery_confirm": {
         "title": "{name} hinzufügen",
-        "description": "Home Assistant hat Companion {version} im Netzwerk gefunden. Prüfe den Port der Weboberfläche, normalerweise 8000, und trage einen API-Token ein. Die REST-API muss aktiv sein, dafür braucht es {flag}=1.",
+        "description": "Home Assistant hat Companion {version} im Netzwerk gefunden. Prüfe den Port der Weboberfläche, normalerweise 8000. Trage dann einen API-Schlüssel aus Companion ein, zu finden unter Settings → Protocols, mit den Scopes read, write und connections.",
         "data": {
           "port": "Port",
           "token": "API-Token"
@@ -41,14 +41,14 @@
       },
       "reauth_confirm": {
         "title": "Erneut bei Companion anmelden",
-        "description": "Der API-Token für {host} wurde abgelehnt. Trage einen Token ein, den Companion akzeptiert.",
+        "description": "Companion hat den API-Token für {host} abgelehnt. Lege in Companion unter Settings → Protocols → „Add API key“ einen neuen an und trage ihn hier ein.",
         "data": {
           "token": "API-Token"
         }
       },
       "reconfigure": {
         "title": "Companion-Verbindung ändern",
-        "description": "Ändere die Adresse dieser Companion-Instanz oder tausche ihren API-Token aus. Die REST-API muss aktiv sein, dafür braucht es {flag}=1.",
+        "description": "Ändere die Adresse dieser Companion-Instanz oder tausche ihren API-Token aus.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -61,9 +61,9 @@
     "error": {
       "cannot_connect": "Unter dieser Adresse und diesem Port antwortet nichts. {error}",
       "not_companion": "Da antwortet etwas, aber es ist nicht Companion. Prüfe Host und Port der Weboberfläche.",
-      "api_unavailable": "Companion läuft, aber seine REST-API ist aus. Starte Companion mit {flag}=1. Wenn das schon gesetzt ist, aktualisiere Companion. Die API gibt es ab Version 5.1. Anleitung für beides: {docs}",
+      "api_unavailable": "Companion läuft, aber seine REST-API ist aus. Schalte sie unter Settings → Protocols ein. Fehlt die Einstellung, aktualisiere Companion. Die API gibt es ab Version 5.1. Anleitung für beides: {docs}",
       "invalid_auth": "Companion hat diesen API-Token abgelehnt.",
-      "insufficient_scope": "Der Token funktioniert, aber er hat zu wenige Rechte. Er muss Surfaces und Verbindungen lesen dürfen und zum Ändern auch schreiben.",
+      "insufficient_scope": "Der Token funktioniert, aber er hat zu wenige Rechte. Er braucht die Scopes read und write, und connections, um Verbindungen zu sehen.",
       "unknown": "Unerwarteter Fehler von Companion. {error} Die Anleitung steht unter {docs}.",
       "unsupported_api": "Companion {version} hat eine REST-API, aber nicht {resource}. Genau die braucht diese Integration, sie ist also zu alt oder zu neu für diese Companion-Version. {docs}"
     },
@@ -102,7 +102,7 @@
     "abort": {
       "cannot_connect": "Home Assistant konnte Companion nicht erreichen und deshalb die Geräteliste nicht laden. {error}",
       "not_companion": "Was unter dieser Adresse läuft, antwortet nicht mehr als Companion.",
-      "api_unavailable": "Companion läuft ohne seine REST-API. Starte es mit {flag}=1. {docs}",
+      "api_unavailable": "Companion läuft, aber seine REST-API ist aus. Schalte sie unter Settings → Protocols ein. {docs}",
       "invalid_auth": "Companion hat den gespeicherten API-Token abgelehnt. Melde die Integration zuerst neu an.",
       "insufficient_scope": "Der gespeicherte API-Token hat zu wenige Rechte.",
       "unknown": "Unerwarteter Fehler von Companion. {error} Die Anleitung steht unter {docs}.",
@@ -154,7 +154,7 @@
   "issues": {
     "api_disabled": {
       "title": "Die REST-API von Companion ist aus",
-      "description": "Companion unter {host} läuft, antwortet aber nicht mehr auf seiner REST-API. Starte Companion mit EXPERIMENTAL_ENABLE_REST_API=1. Bis dahin bleiben seine Surfaces und Verbindungen in Home Assistant nicht verfügbar."
+      "description": "Companion unter {host} läuft, aber seine REST-API ist aus. Schalte sie in Companion unter Settings → Protocols ein. Bis dahin sind seine Surfaces und Verbindungen in Home Assistant nicht verfügbar."
     },
     "connections_scope_lost": {
       "title": "Der API-Token darf keine Verbindungen mehr lesen",
@@ -166,7 +166,7 @@
       "message": "Companion hat den API-Token abgelehnt."
     },
     "api_unavailable": {
-      "message": "Companion läuft ohne seine REST-API. Dafür braucht es EXPERIMENTAL_ENABLE_REST_API=1."
+      "message": "Companion läuft, aber seine REST-API ist aus. Schalte sie unter Settings → Protocols ein."
     },
     "cannot_connect": {
       "message": "Companion war nicht erreichbar. {error}"

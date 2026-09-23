@@ -48,7 +48,7 @@ class CompanionNotFoundError(CompanionError):
 class CompanionApiUnavailableError(CompanionError):
     """Companion is running, but its REST API is not mounted.
 
-    Either EXPERIMENTAL_ENABLE_REST_API is unset or the build predates the API.
+    Either its REST API setting is off or the build predates the API.
     """
 
 
@@ -226,8 +226,8 @@ class CompanionClient:
                 HTTPStatus.FORBIDDEN,
             ):
                 # This path needs no token, so anything but a 200 here means the REST
-                # API is not the thing answering. Companion's legacy API replies 403
-                # when it is switched off, and 404 when it is on but has no such path.
+                # API is not the thing answering. Companion replies 403 when the API is
+                # switched off, and builds without it reply 404.
                 await self._async_raise_for_missing_api()
             if response.status != HTTPStatus.OK:
                 raise CompanionResponseError(
@@ -377,13 +377,16 @@ class CompanionClient:
         except (TimeoutError, aiohttp.ClientError) as err:
             raise CompanionConnectionError(str(err)) from err
 
+        if _error_payload(body).get("code") == "API_DISABLED":
+            # A 403 like a narrow token's, so it must be caught before the scope check.
+            raise CompanionApiUnavailableError(_error_message(body) or "API disabled")
         if response.status == HTTPStatus.UNAUTHORIZED:
             raise CompanionAuthError(_error_message(body) or "Token rejected")
         if response.status == HTTPStatus.FORBIDDEN:
             raise CompanionScopeError(_error_message(body) or "Token scope too narrow")
         if response.status == HTTPStatus.NOT_FOUND:
             # A 404 here has two meanings. Either the id is unknown, or the whole
-            # API is gone because Companion restarted without the flag.
+            # API is gone because Companion was replaced by a build without it.
             await self._async_raise_for_missing_api_or_id(body)
         if response.status >= HTTPStatus.BAD_REQUEST:
             raise CompanionResponseError(
