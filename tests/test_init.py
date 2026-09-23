@@ -57,7 +57,6 @@ async def test_setup_and_unload(
     hass: HomeAssistant,
     mock_api: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A healthy instance loads a device per surface, connection and hub."""
     await setup_entry(hass, mock_config_entry)
@@ -75,7 +74,6 @@ async def test_setup_and_unload(
     }
     hub = next(device for device in devices if device.model == "Companion")
     assert all(device.via_device_id == hub.id for device in devices if device != hub)
-    assert "deprecated" not in caplog.text
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

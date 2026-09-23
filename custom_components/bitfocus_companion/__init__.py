@@ -170,15 +170,11 @@ def _device_sync_callback(
             if not own_ids & wanted:
                 if own_ids & reported:
                     # Companion still reports it. The user just does not want it.
-                    registry.async_update_device(
-                        device.id, remove_config_entry_id=entry.entry_id
-                    )
+                    registry.async_remove_device(device.id)
                     continue
                 missing_now |= own_ids
                 if own_ids & missing_last_time:
-                    registry.async_update_device(
-                        device.id, remove_config_entry_id=entry.entry_id
-                    )
+                    registry.async_remove_device(device.id)
                 continue
 
             own_id = next(iter(own_ids & wanted))

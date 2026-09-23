@@ -131,6 +131,18 @@ def collection(items: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 @pytest.fixture(autouse=True)
+def no_frame_reports(caplog: pytest.LogCaptureFixture) -> Generator[None]:
+    """Fail on any usage Home Assistant reports, deprecated calls included."""
+    yield
+    # Teardown only sees teardown records, so read the call phase explicitly.
+    assert not [
+        record
+        for record in caplog.get_records("call")
+        if record.name == "homeassistant.helpers.frame"
+    ]
+
+
+@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Load the integration from custom_components in every test."""
     return

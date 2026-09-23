@@ -290,6 +290,7 @@ async def test_reauth_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TOKEN: "cpn_new"}
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_TOKEN] == "cpn_new"
@@ -319,6 +320,7 @@ async def test_reconfigure_flow_moves_the_instance(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**ENTRY_DATA, CONF_HOST: new_host}
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == new_host
