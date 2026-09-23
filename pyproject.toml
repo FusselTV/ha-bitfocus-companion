@@ -22,7 +22,7 @@ ignore = [
 "tests/*" = ["ANN001", "ANN201", "D103", "PLR2004", "S101", "S105", "SLF001"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 warn_unreachable = true
 

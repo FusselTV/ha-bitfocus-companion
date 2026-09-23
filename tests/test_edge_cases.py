@@ -213,8 +213,9 @@ async def test_removing_devices_by_hand(
     await setup_entry(hass, mock_config_entry)
     registry = dr.async_get(hass)
 
-    live = registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_surface_{SURFACE['id']}")}
+    live = registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_surface_{SURFACE['id']}"),
+        mock_config_entry.entry_id,
     )
     assert live is not None
     assert not await async_remove_config_entry_device(hass, mock_config_entry, live)
@@ -273,8 +274,9 @@ async def test_two_surfaces_with_the_same_name(
 
     registry = dr.async_get(hass)
     for surface_id in (SURFACE["id"], "emulator:twin"):
-        device = registry.async_get_device(
-            identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_surface_{surface_id}")}
+        device = registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_surface_{surface_id}"),
+            mock_config_entry.entry_id,
         )
         assert device is not None
         assert device.serial_number == surface_id

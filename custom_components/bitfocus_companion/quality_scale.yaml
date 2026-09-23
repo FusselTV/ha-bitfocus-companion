@@ -96,7 +96,7 @@ rules:
     status: done
     comment: >-
       One device for the Companion instance, one per surface and one per
-      connection, linked with via_device.
+      connection, linked with via_device_id.
   diagnostics: done
   discovery:
     status: done
