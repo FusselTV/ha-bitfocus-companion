@@ -269,7 +269,12 @@ async def test_unticking_a_surface_removes_its_device(
     await setup_entry(hass, mock_config_entry)
     registry = dr.async_get(hass)
     device_id = f"{mock_config_entry.entry_id}_surface_{SURFACE_TWO['id']}"
-    assert registry.async_get_device(identifiers={(DOMAIN, device_id)}) is not None
+    assert (
+        registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
+        is not None
+    )
 
     hass.config_entries.async_update_entry(
         mock_config_entry,
@@ -278,7 +283,12 @@ async def test_unticking_a_surface_removes_its_device(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert registry.async_get_device(identifiers={(DOMAIN, device_id)}) is None
+    assert (
+        registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
+        is None
+    )
     assert hass.states.get("number.front_of_house_brightness") is None
     assert hass.states.get(BRIGHTNESS) is not None
 

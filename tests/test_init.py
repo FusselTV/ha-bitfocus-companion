@@ -72,6 +72,8 @@ async def test_setup_and_unload(
         "Elgato Stream Deck XL",
         "bmd-atem",
     }
+    hub = next(device for device in devices if device.model == "Companion")
+    assert all(device.via_device_id == hub.id for device in devices if device != hub)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -248,7 +250,12 @@ async def test_renames_in_companion_follow_through(
         DOMAIN,
         f"{mock_config_entry.entry_id}_connection_{CONNECTION['id']}",
     )
-    assert registry.async_get_device(identifiers={surface_key}).name == "Test surface"
+    assert (
+        registry.async_get_device_by_identifier(
+            surface_key, mock_config_entry.entry_id
+        ).name
+        == "Test surface"
+    )
 
     serve(
         mock_api,
@@ -257,8 +264,15 @@ async def test_renames_in_companion_follow_through(
     )
     await poll(hass, freezer)
 
-    assert registry.async_get_device(identifiers={surface_key}).name == "Front of house"
-    connection_device = registry.async_get_device(identifiers={connection_key})
+    assert (
+        registry.async_get_device_by_identifier(
+            surface_key, mock_config_entry.entry_id
+        ).name
+        == "Front of house"
+    )
+    connection_device = registry.async_get_device_by_identifier(
+        connection_key, mock_config_entry.entry_id
+    )
     assert connection_device.name == "ATEM 2"
     assert connection_device.sw_version == "1.3.0"
 
@@ -458,8 +472,9 @@ async def test_removing_a_device_from_an_unloaded_entry(
 ) -> None:
     """The delete button on a device works while the entry is not loaded."""
     await setup_entry(hass, mock_config_entry)
-    device = dr.async_get(hass).async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_surface_{SURFACE['id']}")}
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_surface_{SURFACE['id']}"),
+        mock_config_entry.entry_id,
     )
     assert device is not None
     await hass.config_entries.async_unload(mock_config_entry.entry_id)

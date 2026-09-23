@@ -43,7 +43,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - run: uv venv --python 3.13
+      - run: uv venv --python 3.14
       - run: uv pip install pytest-homeassistant-custom-component ruff mypy
       - run: uv run ruff check custom_components tests
       - run: uv run ruff format --check custom_components tests
@@ -57,10 +57,9 @@ jobs:
       matrix:
         include:
           # The oldest Home Assistant hacs.json claims to support. Without this the
-          # claim rots silently. pycares is pinned because the old pin resolves to an
-          # aiodns/pycares pair that cannot import together.
-          - name: HA 2025.8
-            packages: 'pytest-homeassistant-custom-component==0.13.270 "pycares<5"'
+          # claim rots silently.
+          - name: HA 2026.8
+            packages: "pytest-homeassistant-custom-component==0.13.354"
           - name: latest
             packages: "pytest-homeassistant-custom-component"
     steps:
@@ -68,7 +67,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - run: uv venv --python 3.13
+      - run: uv venv --python 3.14
       - run: uv pip install ${{ matrix.packages }} pytest-cov
       - run: >-
           uv run pytest tests

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -40,7 +41,11 @@ class CompanionSurfaceEntity(CoordinatorEntity[CompanionCoordinator]):
             manufacturer=surface.integration_type or "Bitfocus",
             model=surface.type or None,
             serial_number=surface_id,
-            via_device=(DOMAIN, hub_device_id(entry)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, hub_device_id(entry)),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -87,7 +92,11 @@ class CompanionConnectionEntity(CoordinatorEntity[CompanionCoordinator]):
             manufacturer="Bitfocus",
             model=connection.module_id or None,
             sw_version=connection.module_version_id,
-            via_device=(DOMAIN, hub_device_id(entry)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, hub_device_id(entry)),
+                config_entry_id=entry.entry_id,
+            ),
         )
 
     async def async_added_to_hass(self) -> None:
