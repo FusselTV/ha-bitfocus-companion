@@ -15,9 +15,9 @@ blueprint:
     cannot black out your studio. Someone in a named zone such as Work counts as away.
 
 
-    All surfaces sleep unless you pick some under "Which surfaces". Every surface
-    comes back to its own brightness, so decks that were dimmed differently stay
-    different.
+    All connected surfaces sleep unless you pick some under "Which surfaces".
+    Surfaces that are not connected are skipped. Every surface comes back to its own
+    brightness, so decks that were dimmed differently stay different.
   domain: automation
   homeassistant:
     min_version: "2025.8.0"
@@ -85,10 +85,20 @@ variables:
     - unknown
   # An empty picker means every surface. Screensaver switches are the ones with no
   # device class. The Enabled switches of connections have device_class: switch.
+  # Companion refuses the call for a surface that is not connected, so those are dropped.
   surfaces: >-
-    {{ chosen_switches if chosen_switches | count > 0
+    {% set base = chosen_switches if chosen_switches | count > 0
        else integration_entities('bitfocus_companion') | select('match', 'switch\\.')
-            | reject('is_state_attr', 'device_class', 'switch') | list }}
+            | reject('is_state_attr', 'device_class', 'switch') | list %}
+    {% set ns = namespace(on=[]) %}
+    {% for s in base %}
+      {% if device_entities(device_id(s)) | select('match', 'binary_sensor\\.')
+            | select('is_state_attr', 'device_class', 'connectivity')
+            | select('is_state', 'on') | list | count > 0 %}
+        {% set ns.on = ns.on + [s] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.on }}
 
 triggers:
   - trigger: state
@@ -117,6 +127,8 @@ actions:
             value_template: >-
               {{ sleep_entities | map('states') | select('in', present_states)
                  | list | count == 0 }}
+          - condition: template
+            value_template: "{{ surfaces | count > 0 }}"
         sequence:
           - action: switch.turn_on
             target:
@@ -124,6 +136,8 @@ actions:
       - conditions:
           - condition: trigger
             id: wake
+          - condition: template
+            value_template: "{{ surfaces | count > 0 }}"
         sequence:
           - action: switch.turn_off
             target:
