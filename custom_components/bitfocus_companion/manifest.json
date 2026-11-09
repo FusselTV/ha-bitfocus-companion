@@ -1,6 +1,7 @@
 {
   "domain": "bitfocus_companion",
   "name": "Bitfocus Companion",
+  "categories": ["buttons_remotes", "media_entertainment"],
   "codeowners": ["@FusselTV"],
   "config_flow": true,
   "documentation": "https://github.com/FusselTV/ha-bitfocus-companion",
