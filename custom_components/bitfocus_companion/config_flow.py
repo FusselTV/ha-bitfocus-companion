@@ -8,7 +8,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
-import voluptuous as vol
+import probatio as vol
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigFlow,

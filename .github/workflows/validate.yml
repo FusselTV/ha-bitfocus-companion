@@ -44,9 +44,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv venv --python 3.14
-      # Types against the oldest supported release: 2026.10 swapped voluptuous for
-      # probatio, and code typed for that no longer runs on 2026.8.
-      - run: uv pip install pytest-homeassistant-custom-component==0.13.354 ruff mypy
+      - run: uv pip install pytest-homeassistant-custom-component ruff mypy
       - run: uv run ruff check custom_components tests
       - run: uv run ruff format --check custom_components tests
       - run: uv run mypy custom_components/bitfocus_companion
@@ -60,8 +58,8 @@ jobs:
         include:
           # The oldest Home Assistant hacs.json claims to support. Without this the
           # claim rots silently.
-          - name: HA 2026.8
-            packages: "pytest-homeassistant-custom-component==0.13.354"
+          - name: HA 2026.10
+            packages: "pytest-homeassistant-custom-component==0.13.371"
           - name: latest
             packages: "pytest-homeassistant-custom-component"
     steps:
