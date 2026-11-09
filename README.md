@@ -15,11 +15,13 @@ One device per surface and per connection, both under a device for the Companion
 are whatever Companion sees, such as Stream Decks, X-keys, Loupedeck and emulators. Connections are
 the modules you configured, such as ATEM, OBS or vMix.
 
+<!-- ha-marketplace:exclude-start -->
 ## Install
 
-[![Open your Home Assistant instance and add this repository to HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FusselTV&repository=ha-bitfocus-companion&category=integration)
+[![Open this repository in the Home Assistant Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FusselTV&repository=ha-bitfocus-companion&category=integration)
 
-Or add it to HACS as a custom repository, category Integration:
+Or open **Settings → Marketplace**, choose **Add from link** and paste this address. Before Home
+Assistant 2026.11, add it to HACS as a custom repository, category Integration.
 
 ```
 https://github.com/FusselTV/ha-bitfocus-companion
@@ -27,6 +29,7 @@ https://github.com/FusselTV/ha-bitfocus-companion
 
 Restart Home Assistant afterwards.
 
+<!-- ha-marketplace:exclude-end -->
 ## Set up
 
 Companion announces itself over mDNS, so it usually turns up on its own under **Settings → Devices &
