@@ -69,7 +69,6 @@ class CompanionCoordinator(DataUpdateCoordinator[CompanionData]):
         # Entities grouped by the surface or connection they belong to. A write then
         # refreshes those few entities instead of every entity of the config entry.
         self._object_listeners: dict[str, set[CALLBACK_TYPE]] = {}
-        self._connections_denied = False
 
     async def _async_update_data(self) -> CompanionData:
         """Fetch surfaces, and connections if the token is allowed to see them."""
